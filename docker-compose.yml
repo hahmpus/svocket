@@ -1,0 +1,26 @@
+version: '3.3'
+services:
+  # calorie:
+  #     build:
+  #         context: .
+  #         dockerfile: Dockerfile
+  #         args:
+  #           - BUILD_NO_CACHE=1
+  #     ports:
+  #         - '8080:8080'
+  #     container_name: calorie-docker
+  #     image: calorie
+  #     restart: always
+  #     depends_on:
+  #         - surrealdb
+  surrealdb:
+    image: surrealdb/surrealdb:latest
+    restart: always
+    container_name: surrealdb
+    ports:
+      - "8000:8000"
+    command: 
+      - start
+      - --log=debug
+      - --user=root
+      - --pass=root
