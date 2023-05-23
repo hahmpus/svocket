@@ -9,29 +9,38 @@ pub struct Recipie {
 
 impl SurrealClient {
 
-    async fn get(&self) -> surrealdb::Result<Vec<Recipie>> {
+    async fn get(&self, id: Option<&str>) -> surrealdb::Result<Vec<Recipie>> {
         if !self.initialized {
             panic!("Surreal client not initialized");
         }
 
-        let res: Vec<Recipie> = self.client
-            .select("recipie")
-            .await?;
+        let result: Vec<Recipie> = match id {
+            Some(id) => self.client
+                .select(("recipie", id))
+                .await?,
+            None => self.client
+                .select("recipie")
+                .await?
+        };
 
-        Ok(res)
+        // let recipies: Vec<Recipie> = self.client
+        //     .select("recipie")
+        //     .await?;
+
+        Ok(result)
     }
 
-    async fn add(&self, data: Json<Recipie>) -> surrealdb::Result<()> {
+    async fn add(&self, data: Json<Recipie>) -> surrealdb::Result<Recipie> {
         if !self.initialized {
             panic!("Surreal client not initialized");
         }
 
-        let _created: Recipie = self.client
+        let created: Recipie = self.client
             .create("recipie")
             .content(data.into_inner())
             .await?;
 
-        Ok(())
+        Ok(created)
     }
 
 }
@@ -41,7 +50,7 @@ impl SurrealClient {
 #[get("/recipie", format="json")]
 pub async fn get_recipie(surreal: &State<SurrealClient>) -> Json<Vec<Recipie>> {
 
-    let things = surreal.get().await;
+    let things = surreal.get(None).await;
 
     println!("{:?}", things);
     match things {
