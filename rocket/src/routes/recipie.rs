@@ -1,9 +1,11 @@
 use rocket::*;
 use rocket::serde::{json::Json, Serialize, Deserialize};
-use crate::database::surreal::SurrealClient;
+use crate::database::surreal::*;
+use surrealdb::sql::Thing;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Recipie {
+    id: Option<Thing>,
     name: String,
 }
 
@@ -22,10 +24,6 @@ impl SurrealClient {
                 .select("recipie")
                 .await?
         };
-
-        // let recipies: Vec<Recipie> = self.client
-        //     .select("recipie")
-        //     .await?;
 
         Ok(result)
     }

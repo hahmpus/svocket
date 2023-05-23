@@ -5,7 +5,6 @@ use surrealdb::engine::remote::ws:: {
 use surrealdb::opt::auth::Root;
 use surrealdb::Surreal;
 
-
 pub struct SurrealClient {
     pub initialized: bool,
     pub client: Surreal<Client>
