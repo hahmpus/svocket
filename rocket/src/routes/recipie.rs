@@ -55,7 +55,5 @@ pub async fn add_recipie(surreal: &State<SurrealClient>, recipie: Json<Recipie>)
 
     let _created = surreal.add(recipie).await;
 
-    // println!("{:?}", things);
-
     "Hello, world!"
 }
