@@ -5,15 +5,12 @@ use surrealdb::engine::remote::ws:: {
 use surrealdb::opt::auth::Root;
 use surrealdb::Surreal;
 
-use crate::models;
+use rocket::serde::{json::Json, Serialize, Deserialize, DeserializeOwned};
 
-pub enum Model {
-    Recipie(models::recipie::Recipie),
-}
 
 pub struct SurrealClient {
-    pub initialized: bool,
-    pub client: Surreal<Client>
+    pub client: Surreal<Client>,
+    initialized: bool,
 }
 
 impl SurrealClient {
@@ -40,12 +37,62 @@ impl SurrealClient {
         }
     }
 
-    pub fn matchModel(&self, model_name: &str) -> Model {
-        match model_name {
-            "recipie" => Model::Recipie(models::recipie::Recipie::new()),
-            _ => panic!("Model not found")
+
+
+    //SELECT
+    pub async fn select
+    <T: Sync + Send + Serialize + DeserializeOwned>
+    (&self, id: Option<&str>) -> surrealdb::Result<Vec<T>> {
+        if !self.initialized {
+            panic!("Surreal client not initialized");
         }
+    
+        let result: Vec<T> = match id {
+            Some(id) => self.client
+                .select(("recipie", id))
+                .await?,
+            None => self.client
+                .select("recipie")
+                .await?
+        };
+    
+        Ok(result)
+    }
+    
+
+
+    //CREATE
+    pub async fn create
+    <T: Sync + Send + Serialize + DeserializeOwned>
+    (&self, data: Json<T>) -> surrealdb::Result<T> {
+        if !self.initialized {
+            panic!("Surreal client not initialized");
+        }
+
+        let created: T = self.client
+            .create("recipie")
+            .content(data.into_inner())
+            .await?;
+
+        Ok(created)
     }
 
-    
+
+
+    //UPDATE
+    pub async fn update_with_content
+    <T: Sync + Send + Serialize + DeserializeOwned>
+    (&self, id: &str, data: Json<T>) -> surrealdb::Result<T> {
+        if !self.initialized {
+            panic!("Surreal client not initialized");
+        }
+
+        let updated: T = self.client
+            .update(("recipie", id))
+            .content(data.into_inner())
+            .await?;
+
+        Ok(updated)
+    }
+
 }
