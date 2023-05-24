@@ -9,9 +9,16 @@ pub struct Recipie {
     name: String,
 }
 
+struct Response {
+    success: bool,
+    message: String,
+    data: Vec<Recipie>
+}
+
 impl SurrealClient {
 
-    async fn get(&self, id: Option<&str>) -> surrealdb::Result<Vec<Recipie>> {
+    //SELECT
+    async fn select(&self, id: Option<&str>) -> surrealdb::Result<Vec<Recipie>> {
         if !self.initialized {
             panic!("Surreal client not initialized");
         }
@@ -28,7 +35,8 @@ impl SurrealClient {
         Ok(result)
     }
 
-    async fn add(&self, data: Json<Recipie>) -> surrealdb::Result<Recipie> {
+    //CREATE
+    async fn create(&self, data: Json<Recipie>) -> surrealdb::Result<Recipie> {
         if !self.initialized {
             panic!("Surreal client not initialized");
         }
@@ -41,26 +49,52 @@ impl SurrealClient {
         Ok(created)
     }
 
+    //UPDATE
+    async fn update_with_content(&self, id: &str, data: Json<Recipie>) -> surrealdb::Result<Recipie> {
+        if !self.initialized {
+            panic!("Surreal client not initialized");
+        }
+
+        let updated: Recipie = self.client
+            .update(("recipie", id))
+            .content(data.into_inner())
+            .await?;
+
+        Ok(updated)
+    }
+
+
 }
 
 
-
+//GET
 #[get("/recipie", format="json")]
 pub async fn get_recipie(surreal: &State<SurrealClient>) -> Json<Vec<Recipie>> {
 
-    let things = surreal.get(None).await;
+    let recipies = surreal.select(None).await;
 
-    println!("{:?}", things);
-    match things {
-        Ok(things) => Json(things),
+    println!("{:?}", recipies);
+    match recipies {
+        Ok(recipies) => Json(recipies),
         Err(e) => panic!("{:?}", e)
     }
 }
 
+//POST
 #[post("/recipie", data="<recipie>")]
 pub async fn add_recipie(surreal: &State<SurrealClient>, recipie: Json<Recipie>) -> &'static str {
 
-    let _created = surreal.add(recipie).await;
+    let _created = surreal.create(recipie).await;
+
+    "Hello, world!"
+}
+
+
+//PUT
+#[put("/recipie/<id>", data="<recipie>")]
+pub async fn update_recipie(surreal: &State<SurrealClient>, id: &str, recipie: Json<Recipie>) -> &'static str {
+
+    let _updated = surreal.update_with_content(id, recipie).await;
 
     "Hello, world!"
 }
