@@ -1,6 +1,6 @@
 use rocket::*;
 use rocket::serde::{json::Json, Serialize, Deserialize};
-use crate::database::surreal::*;
+use crate::database::*;
 use surrealdb::sql::Thing;
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -9,10 +9,10 @@ pub struct Recipie {
     name: String,
 }
 
-#[get("/recipie", format="json")]
-pub async fn get_recipie(surreal: &State<SurrealClient>) -> Json<Vec<Recipie>> {
+#[get("/recipie/<id>", format="json")]
+pub async fn get_recipie(surreal: &State<surreal::SurrealClient>, id: Option<&str>) -> Json<Vec<Recipie>> {
 
-    let recipies: Result<Vec<Recipie>, surrealdb::Error> = surreal.select(None).await;
+    let recipies: Result<Vec<Recipie>, surrealdb::Error> = surreal.select(id).await;
 
     println!("{:?}", recipies);
     match recipies {
@@ -23,7 +23,7 @@ pub async fn get_recipie(surreal: &State<SurrealClient>) -> Json<Vec<Recipie>> {
 
 //POST
 #[post("/recipie", data="<recipie>")]
-pub async fn add_recipie(surreal: &State<SurrealClient>, recipie: Json<Recipie>) -> &'static str {
+pub async fn add_recipie(surreal: &State<surreal::SurrealClient>, recipie: Json<Recipie>) -> &'static str {
 
     let _created = surreal.create(recipie).await;
 
@@ -33,7 +33,7 @@ pub async fn add_recipie(surreal: &State<SurrealClient>, recipie: Json<Recipie>)
 
 //PUT
 #[put("/recipie/<id>", data="<recipie>")]
-pub async fn update_recipie(surreal: &State<SurrealClient>, id: &str, recipie: Json<Recipie>) -> &'static str {
+pub async fn update_recipie(surreal: &State<surreal::SurrealClient>, id: &str, recipie: Json<Recipie>) -> &'static str {
 
     let _updated = surreal.update_with_content(id, recipie).await;
 

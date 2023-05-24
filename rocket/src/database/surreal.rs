@@ -4,9 +4,10 @@ use surrealdb::engine::remote::ws:: {
 };
 use surrealdb::opt::auth::Root;
 use surrealdb::Surreal;
+use rocket::serde::{json::Json, Serialize, DeserializeOwned};
 
-use rocket::serde::{json::Json, Serialize, Deserialize, DeserializeOwned};
-
+pub trait GenericStruct: Sync + Send + Serialize + DeserializeOwned {}
+impl <T: Sync + Send + Serialize + DeserializeOwned> GenericStruct for T {}
 
 pub struct SurrealClient {
     pub client: Surreal<Client>,
@@ -41,11 +42,13 @@ impl SurrealClient {
 
     //SELECT
     pub async fn select
-    <T: Sync + Send + Serialize + DeserializeOwned>
+    <T: GenericStruct>
     (&self, id: Option<&str>) -> surrealdb::Result<Vec<T>> {
         if !self.initialized {
             panic!("Surreal client not initialized");
         }
+
+        //wrap item if id is provided
     
         let result: Vec<T> = match id {
             Some(id) => self.client
@@ -63,7 +66,7 @@ impl SurrealClient {
 
     //CREATE
     pub async fn create
-    <T: Sync + Send + Serialize + DeserializeOwned>
+    <T: GenericStruct>
     (&self, data: Json<T>) -> surrealdb::Result<T> {
         if !self.initialized {
             panic!("Surreal client not initialized");
@@ -81,7 +84,7 @@ impl SurrealClient {
 
     //UPDATE
     pub async fn update_with_content
-    <T: Sync + Send + Serialize + DeserializeOwned>
+    <T: GenericStruct>
     (&self, id: &str, data: Json<T>) -> surrealdb::Result<T> {
         if !self.initialized {
             panic!("Surreal client not initialized");
