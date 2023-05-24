@@ -5,6 +5,7 @@ use database::surreal::SurrealClient;
 // #[get("/")]
 // api::recipie::hello();
 
+pub mod models;
 pub mod routes;
 pub mod database;
 

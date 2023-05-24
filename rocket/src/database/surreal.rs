@@ -5,6 +5,12 @@ use surrealdb::engine::remote::ws:: {
 use surrealdb::opt::auth::Root;
 use surrealdb::Surreal;
 
+use crate::models;
+
+pub enum Model {
+    Recipie(models::recipie::Recipie),
+}
+
 pub struct SurrealClient {
     pub initialized: bool,
     pub client: Surreal<Client>
@@ -33,5 +39,13 @@ impl SurrealClient {
             client: surreal_client
         }
     }
+
+    pub fn matchModel(&self, model_name: &str) -> Model {
+        match model_name {
+            "recipie" => Model::Recipie(models::recipie::Recipie::new()),
+            _ => panic!("Model not found")
+        }
+    }
+
     
 }

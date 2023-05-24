@@ -9,12 +9,6 @@ pub struct Recipie {
     name: String,
 }
 
-struct Response {
-    success: bool,
-    message: String,
-    data: Vec<Recipie>
-}
-
 impl SurrealClient {
 
     //SELECT
