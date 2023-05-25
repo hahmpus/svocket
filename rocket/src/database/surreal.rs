@@ -1,14 +1,12 @@
-use surrealdb::engine::remote::ws:: {
-    Ws,
-    Client
-};
+use surrealdb::engine::remote::ws:: {Ws, Client};
 use surrealdb::opt::auth::Root;
 use surrealdb::Surreal;
+
+use std::fmt::Debug;
 use rocket::serde::{json::Json, Serialize, DeserializeOwned};
 
-pub trait GenericStruct: Sync + Send + Serialize + DeserializeOwned {}
-impl <T: Sync + Send + Serialize + DeserializeOwned> GenericStruct for T {}
-
+pub trait GenericStruct: Sync + Send + Serialize + DeserializeOwned + Debug {}
+impl <T: Sync + Send + Serialize + DeserializeOwned + Debug> GenericStruct for T {}
 pub struct SurrealClient {
     pub client: Surreal<Client>,
     initialized: bool,
@@ -65,13 +63,13 @@ impl SurrealClient {
 
 
     //CREATE
-    pub async fn create<T: GenericStruct>(&self, data: Json<T>) -> surrealdb::Result<T> {
+    pub async fn create<T: GenericStruct>(&self,  model: &str, data: Json<T>) -> surrealdb::Result<T> {
         if !self.initialized {
             panic!("Surreal client not initialized");
         }
 
         let created: T = self.client
-            .create("recipie")
+            .create(model)
             .content(data.into_inner())
             .await?;
 
@@ -81,17 +79,32 @@ impl SurrealClient {
 
 
     //UPDATE
-    pub async fn update_with_content<T: GenericStruct>(&self, id: &str, data: Json<T>) -> surrealdb::Result<T> {
+    pub async fn update_with_content<T: GenericStruct>(&self,  model: &str, id: &str, data: Json<T>) -> surrealdb::Result<T> {
         if !self.initialized {
             panic!("Surreal client not initialized");
         }
 
         let updated: T = self.client
-            .update(("recipie", id))
+            .update((model, id))
             .content(data.into_inner())
             .await?;
 
         Ok(updated)
+    }
+
+
+
+    //DELETE
+    pub async fn delete(&self,  model: &str, id: &str) -> surrealdb::Result<()> {
+        if !self.initialized {
+            panic!("Surreal client not initialized");
+        }
+
+        self.client
+            .delete((model, id))
+            .await?;
+
+        Ok(())
     }
 
 }

@@ -17,6 +17,9 @@ async fn main() -> Result<(), rocket::Error> {
         .manage(surreal)
         .mount("/api", routes![routes::recipie::get_recipie])
         .mount("/api", routes![routes::recipie::add_recipie])
+        .mount("/api", routes![routes::recipie::get_recipie_by_id])
+        .mount("/api", routes![routes::recipie::update_recipie])
+        .mount("/api", routes![routes::recipie::delete_recipie])
         .launch()
         .await?;
 
