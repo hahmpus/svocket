@@ -12,7 +12,7 @@ pub struct Recipie {
 #[get("/recipie/<id>", format="json")]
 pub async fn get_recipie(surreal: &State<surreal::SurrealClient>, id: Option<&str>) -> Json<Vec<Recipie>> {
 
-    let recipies: Result<Vec<Recipie>, surrealdb::Error> = surreal.select(id).await;
+    let recipies: Result<Vec<Recipie>, surrealdb::Error> = surreal.select("recipie", id).await;
 
     println!("{:?}", recipies);
     match recipies {

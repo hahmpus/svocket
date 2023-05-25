@@ -41,33 +41,31 @@ impl SurrealClient {
 
 
     //SELECT
-    pub async fn select
-    <T: GenericStruct>
-    (&self, id: Option<&str>) -> surrealdb::Result<Vec<T>> {
+    pub async fn select<T: GenericStruct>(&self, model: &str, id: Option<&str>) -> surrealdb::Result<Vec<T>> {
         if !self.initialized {
             panic!("Surreal client not initialized");
         }
 
-        //wrap item if id is provided
-    
         let result: Vec<T> = match id {
-            Some(id) => self.client
-                .select(("recipie", id))
-                .await?,
-            None => self.client
-                .select("recipie")
+            Some(id) => vec![
+                self
+                .client
+                .select((model, id))
                 .await?
+                ],
+            None => self
+                .client
+                .select(model)
+                .await? 
         };
-    
+
         Ok(result)
     }
     
 
 
     //CREATE
-    pub async fn create
-    <T: GenericStruct>
-    (&self, data: Json<T>) -> surrealdb::Result<T> {
+    pub async fn create<T: GenericStruct>(&self, data: Json<T>) -> surrealdb::Result<T> {
         if !self.initialized {
             panic!("Surreal client not initialized");
         }
@@ -83,9 +81,7 @@ impl SurrealClient {
 
 
     //UPDATE
-    pub async fn update_with_content
-    <T: GenericStruct>
-    (&self, id: &str, data: Json<T>) -> surrealdb::Result<T> {
+    pub async fn update_with_content<T: GenericStruct>(&self, id: &str, data: Json<T>) -> surrealdb::Result<T> {
         if !self.initialized {
             panic!("Surreal client not initialized");
         }
