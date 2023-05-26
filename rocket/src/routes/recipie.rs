@@ -2,7 +2,8 @@ use rocket::*;
 use rocket::serde::{json::Json, Serialize, Deserialize};
 use crate::database::*;
 use surrealdb::sql::Thing;
-use super::response::Reponse;
+use super::response::StatusResponse;
+
 
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -11,54 +12,58 @@ pub struct Recipie {
     name: String,
 }
 
-impl Recipie {
-    pub fn empty() -> Self {
-        Self {
-            id: None,
-            name: "".to_string(),
-        }
-    }
-}
 
 
 //LIST
 #[get("/recipie", format="json")]
-pub async fn get_recipie(surreal: &State<surreal::SurrealClient>) -> Json<Vec<Recipie>> {
+pub async fn get_recipie(surreal: &State<surreal::SurrealClient>) -> StatusResponse<Vec<Recipie>> {
 
-    let recipies: Result<Vec<Recipie>, surrealdb::Error> = surreal.select("recipie", None).await;
+    let recipies= surreal.list("recipie").await;
 
-    println!("{:?}", recipies);
     match recipies {
-        Ok(recipies) => Json(recipies),
-        Err(e) => panic!("{:?}", e)
+        Ok(recipies) => StatusResponse {
+            status: 200,
+            data: recipies
+        },
+        Err(_e) => StatusResponse {
+            status: 204,
+            data: vec![]
+        }
     }
 }
 
 //GET
-#[get("/recipie/<id>", format="json")]
-pub async fn get_recipie_by_id(surreal: &State<surreal::SurrealClient>, id: &str) -> Json<Vec<Recipie>> {
+#[get("/recipie/<id>")]
+pub async fn get_recipie_by_id(surreal: &State<surreal::SurrealClient>, id: &str) -> StatusResponse<Option<Recipie>> {
 
-    let recipies: Result<Vec<Recipie>, surrealdb::Error> = surreal.select("recipie", Some(id)).await;
+    let recipie = surreal.select("recipie", id).await;
 
-    println!("{:?}", recipies);
-    match recipies {
-        Ok(recipies) => Json(recipies),
-        Err(e) => panic!("{:?}", e)
+    match recipie {
+        Ok(recipie) => StatusResponse {
+            status: 200,
+            data: Some(recipie)
+        },
+        Err(_e) => StatusResponse {
+            status: 404,
+            data: None
+        }
     }
 }
 
 //POST
 #[post("/recipie", data="<recipie>")]
-pub async fn add_recipie(surreal: &State<surreal::SurrealClient>, recipie: Json<Recipie>) -> Reponse<Recipie> {
+pub async fn add_recipie(surreal: &State<surreal::SurrealClient>, recipie: Json<Recipie>) -> StatusResponse<Option<Recipie>> {
 
-    match surreal.create("recipie", recipie).await {
-        Ok(created) => Reponse {
+    let created = surreal.create("recipie", recipie).await; 
+
+    match created {
+        Ok(created_recipie) => StatusResponse {
             status: 201,
-            data: created 
+            data: Some(created_recipie) 
         },
-        Err(e) => Reponse {
-            status: 500,
-            data: Recipie::empty()
+        Err(_e) => StatusResponse {
+            status: 404,
+            data: None
         }
     }
 
@@ -66,18 +71,38 @@ pub async fn add_recipie(surreal: &State<surreal::SurrealClient>, recipie: Json<
 
 //PUT
 #[put("/recipie/<id>", data="<recipie>")]
-pub async fn update_recipie(surreal: &State<surreal::SurrealClient>, id: &str, recipie: Json<Recipie>) -> &'static str {
+pub async fn update_recipie(surreal: &State<surreal::SurrealClient>, id: &str, recipie: Json<Recipie>) -> StatusResponse<Option<Recipie>> {
 
-    let _updated = surreal.update_with_content("recipie", id, recipie).await;
+    let updated = surreal.update_with_content("recipie", id, recipie).await;
 
-    "Hello, world!"
+    match updated {
+        Ok(updated_recipie) => StatusResponse {
+            status: 200,
+            data: Some(updated_recipie) 
+        },
+        Err(_e) => StatusResponse {
+            status: 404,
+            data: None
+        }
+    }
+
 }
 
 //DELETE
 #[delete("/recipie/<id>")]
-pub async fn delete_recipie(surreal: &State<surreal::SurrealClient>, id: &str) -> &'static str {
+pub async fn delete_recipie(surreal: &State<surreal::SurrealClient>, id: &str) -> StatusResponse<String> {
 
-    let _deleted = surreal.delete("recipie", id).await;
+    let deleted = surreal.delete("recipie", id).await;
 
-    "Hello, world!"
+    match deleted {
+        Ok(_) => StatusResponse {
+            status: 200,
+            data: "Recipie removed successfully".to_string()
+        },
+        Err(_e) => StatusResponse {
+            status: 500,
+            data: "Error deleting recipie".to_string()
+        }
+    }
+    
 }

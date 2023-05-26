@@ -38,28 +38,36 @@ impl SurrealClient {
 
 
 
-    //SELECT
-    pub async fn select<T: GenericStruct>(&self, model: &str, id: Option<&str>) -> surrealdb::Result<Vec<T>> {
+    //SELECT ONE
+    pub async fn select<T: GenericStruct>(&self, model: &str, id: &str) -> surrealdb::Result<T> {
         if !self.initialized {
             panic!("Surreal client not initialized");
         }
 
-        let result: Vec<T> = match id {
-            Some(id) => vec![
-                self
-                .client
-                .select((model, id))
-                .await?
-                ],
-            None => self
-                .client
-                .select(model)
-                .await? 
-        };
+        let result: T = self
+            .client
+            .select((model, id))
+            .await?;
 
         Ok(result)
     }
     
+
+
+    //SELECT ALL
+    pub async fn list<T: GenericStruct>(&self, model: &str) -> surrealdb::Result<Vec<T>> {
+        if !self.initialized {
+            panic!("Surreal client not initialized");
+        }
+
+        let result: Vec<T> = self
+            .client
+            .select(model)
+            .await?; 
+
+        Ok(result)
+    }
+
 
 
     //CREATE

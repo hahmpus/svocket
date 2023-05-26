@@ -6,12 +6,12 @@ use serde::Serialize;
 use rocket::http::ContentType;
 
 #[derive(Serialize)]
-pub struct Reponse<T> {
+pub struct StatusResponse<T> {
     pub status: u16,
     pub data: T,
 }
 
-impl<'request, 'response: 'request, T: Serialize> Responder<'request, 'response> for Reponse<T> {
+impl<'request, 'response: 'request, T: Serialize> Responder<'request, 'response> for StatusResponse<T> {
     fn respond_to(self, request: &'request Request<'_>) -> rocket::response::Result<'response> {
         let json_response = Json(&self.data);
 
