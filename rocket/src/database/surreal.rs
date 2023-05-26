@@ -1,3 +1,4 @@
+use rocket::Build;
 use surrealdb::engine::remote::ws:: {Ws, Client};
 use surrealdb::opt::auth::Root;
 use surrealdb::Surreal;
@@ -51,7 +52,7 @@ impl SurrealClient {
 
         Ok(result)
     }
-    
+
 
 
     //SELECT ALL
@@ -113,6 +114,27 @@ impl SurrealClient {
             .await?;
 
         Ok(())
+    }
+
+}
+
+//HOOKS
+use rocket::{fairing::{Fairing, Info, Kind}, Rocket};
+pub struct SurrealFairing;
+#[rocket::async_trait]
+impl Fairing for SurrealFairing {
+
+    fn info(&self) -> Info {
+        Info {
+            name: "Surreal Fairing",
+            kind: Kind::Ignite
+        }
+    }
+
+    //init surrreal instance on ignite
+    async fn on_ignite(&self, rocket: Rocket<Build>) -> Result<Rocket<Build>, Rocket<Build>> {
+        let surreal_client = SurrealClient::init().await;
+        Ok(rocket.manage(surreal_client))
     }
 
 }

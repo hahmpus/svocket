@@ -1,4 +1,5 @@
-use database::surreal::SurrealClient;
+use database::surreal::SurrealFairing;
+use routes::recipie::RecipieFairing;
 
 #[macro_use] extern crate rocket;
 
@@ -11,15 +12,9 @@ pub mod database;
 #[rocket::main]
 async fn main() -> Result<(), rocket::Error> {
 
-    let surreal: SurrealClient = SurrealClient::init().await;
-
     let _rocket = rocket::build()
-        .manage(surreal)
-        .mount("/api", routes![routes::recipie::get_recipie])
-        .mount("/api", routes![routes::recipie::add_recipie])
-        .mount("/api", routes![routes::recipie::get_recipie_by_id])
-        .mount("/api", routes![routes::recipie::update_recipie])
-        .mount("/api", routes![routes::recipie::delete_recipie])
+        .attach(SurrealFairing)
+        .attach(RecipieFairing)
         .launch()
         .await?;
 

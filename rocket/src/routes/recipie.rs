@@ -4,15 +4,11 @@ use crate::database::*;
 use surrealdb::sql::Thing;
 use super::response::StatusResponse;
 
-
-
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Recipie {
     id: Option<Thing>,
     name: String,
 }
-
-
 
 //LIST
 #[get("/recipie", format="json")]
@@ -26,7 +22,7 @@ pub async fn get_recipie(surreal: &State<surreal::SurrealClient>) -> StatusRespo
             data: recipies
         },
         Err(_e) => StatusResponse {
-            status: 204,
+            status: 404,
             data: vec![]
         }
     }
@@ -77,7 +73,7 @@ pub async fn update_recipie(surreal: &State<surreal::SurrealClient>, id: &str, r
 
     match updated {
         Ok(updated_recipie) => StatusResponse {
-            status: 200,
+            status: 201,
             data: Some(updated_recipie) 
         },
         Err(_e) => StatusResponse {
@@ -95,7 +91,7 @@ pub async fn delete_recipie(surreal: &State<surreal::SurrealClient>, id: &str) -
     let deleted = surreal.delete("recipie", id).await;
 
     match deleted {
-        Ok(_) => StatusResponse {
+        Ok(_deleted) => StatusResponse {
             status: 200,
             data: "Recipie removed successfully".to_string()
         },
@@ -105,4 +101,32 @@ pub async fn delete_recipie(surreal: &State<surreal::SurrealClient>, id: &str) -
         }
     }
     
+}
+
+
+
+//HOOKS
+use rocket::{fairing::{Fairing, Info, Kind}, Rocket};
+pub struct RecipieFairing;
+#[rocket::async_trait]
+impl Fairing for RecipieFairing {
+
+    fn info(&self) -> Info {
+        Info {
+            name: "Recipie Fairing",
+            kind: Kind::Ignite
+        }
+    }
+
+    //mount all routes on ignite
+    async fn on_ignite(&self, rocket: Rocket<Build>) -> Result<Rocket<Build>, Rocket<Build>> {
+        Ok(rocket.mount("/", routes![
+            get_recipie,
+            get_recipie_by_id,
+            add_recipie,
+            update_recipie,
+            delete_recipie
+        ]))
+    }
+
 }
