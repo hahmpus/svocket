@@ -1,11 +1,6 @@
 use database::surreal::SurrealFairing;
 use routes::recipie::RecipieFairing;
 
-#[macro_use] extern crate rocket;
-
-// #[get("/")]
-// api::recipie::hello();
-
 pub mod routes;
 pub mod database;
 

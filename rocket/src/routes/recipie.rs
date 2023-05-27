@@ -29,7 +29,7 @@ pub async fn get_recipie(surreal: &State<surreal::SurrealClient>) -> StatusRespo
 }
 
 //GET
-#[get("/recipie/<id>")]
+#[get("/recipie/<id>", format="json")]
 pub async fn get_recipie_by_id(surreal: &State<surreal::SurrealClient>, id: &str) -> StatusResponse<Option<Recipie>> {
 
     let recipie = surreal.select("recipie", id).await;
@@ -69,7 +69,7 @@ pub async fn add_recipie(surreal: &State<surreal::SurrealClient>, recipie: Json<
 #[put("/recipie/<id>", data="<recipie>")]
 pub async fn update_recipie(surreal: &State<surreal::SurrealClient>, id: &str, recipie: Json<Recipie>) -> StatusResponse<Option<Recipie>> {
 
-    let updated = surreal.update_with_content("recipie", id, recipie).await;
+    let updated = surreal.update_with_merge("recipie", id, recipie).await;
 
     match updated {
         Ok(updated_recipie) => StatusResponse {
@@ -88,16 +88,37 @@ pub async fn update_recipie(surreal: &State<surreal::SurrealClient>, id: &str, r
 #[delete("/recipie/<id>")]
 pub async fn delete_recipie(surreal: &State<surreal::SurrealClient>, id: &str) -> StatusResponse<String> {
 
-    let deleted = surreal.delete("recipie", id).await;
+    let deleted: Result<Recipie, surrealdb::Error> = surreal.delete("recipie", id).await;
 
     match deleted {
         Ok(_deleted) => StatusResponse {
             status: 200,
             data: "Recipie removed successfully".to_string()
         },
-        Err(_e) => StatusResponse {
+        Err(e) => StatusResponse {
             status: 500,
-            data: "Error deleting recipie".to_string()
+            data: e.to_string()
+        }
+    }
+    
+}
+
+
+
+//TEST
+#[get("/test")]
+pub async fn test(surreal: &State<surreal::SurrealClient>) -> StatusResponse<Vec<Recipie>> {
+
+    let test = surreal.query("SELECT * FROM recipie").await;
+
+    match test {
+        Ok(test) => StatusResponse {
+            status: 200,
+            data: test
+        },
+        Err(_e) => StatusResponse {
+            status: 404,
+            data: vec![]
         }
     }
     
@@ -125,7 +146,8 @@ impl Fairing for RecipieFairing {
             get_recipie_by_id,
             add_recipie,
             update_recipie,
-            delete_recipie
+            delete_recipie,
+            test
         ]))
     }
 

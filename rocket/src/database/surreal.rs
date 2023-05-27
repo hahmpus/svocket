@@ -1,4 +1,5 @@
 use rocket::Build;
+use rocket::serde::json::serde_json::de;
 use surrealdb::engine::remote::ws:: {Ws, Client};
 use surrealdb::opt::auth::Root;
 use surrealdb::Surreal;
@@ -18,7 +19,7 @@ impl SurrealClient {
     // INIT
     pub async fn init() -> Self {
         println!("Connect to surreal client");
-        let surreal_client = Surreal::new::<Ws>("127.0.0.1:8000/rpc").await.unwrap();
+        let surreal_client = Surreal::new::<Ws>("127.0.0.1:8000").await.unwrap();
     
         println!("Signing in");
         surreal_client.signin(Root {
@@ -35,6 +36,24 @@ impl SurrealClient {
             initialized: true,
             client: surreal_client
         }
+    }
+
+
+
+    //QUERY
+    pub async fn query<T: GenericStruct>(&self, query: &str) -> surrealdb::Result<Vec<T>> {
+        if !self.initialized {
+            panic!("Surreal client not initialized");
+        }
+
+        let mut response = self
+            .client
+            .query(query)
+            .await?;
+    
+        let result: Vec<T> = response.take(0)?;
+
+        Ok(result)
     }
 
 
@@ -101,22 +120,37 @@ impl SurrealClient {
         Ok(updated)
     }
 
-
-
-    //DELETE
-    pub async fn delete(&self,  model: &str, id: &str) -> surrealdb::Result<()> {
+    pub async fn update_with_merge<T: GenericStruct>(&self,  model: &str, id: &str, data: Json<T>) -> surrealdb::Result<T> {
         if !self.initialized {
             panic!("Surreal client not initialized");
         }
 
-        self.client
+        let updated: T = self.client
+            .update((model, id))
+            .merge(data.into_inner())
+            .await?;
+
+        Ok(updated)
+    }
+
+
+
+    //DELETE
+    pub async fn delete<T: GenericStruct>(&self,  model: &str, id: &str) -> surrealdb::Result<T> {
+        if !self.initialized {
+            panic!("Surreal client not initialized");
+        }
+
+        let deleted: T = self.client
             .delete((model, id))
             .await?;
 
-        Ok(())
+        Ok(deleted)
     }
 
 }
+
+
 
 //HOOKS
 use rocket::{fairing::{Fairing, Info, Kind}, Rocket};
