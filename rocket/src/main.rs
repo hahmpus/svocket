@@ -1,8 +1,9 @@
 use database::surreal::SurrealFairing;
-use routes::recipie::RecipieFairing;
 
+use routes::recipie_routes::RecipieFairing;
 pub mod routes;
 pub mod database;
+pub mod model;
 
 #[rocket::main]
 async fn main() -> Result<(), rocket::Error> {

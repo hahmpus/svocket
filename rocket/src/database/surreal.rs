@@ -58,7 +58,7 @@ impl SurrealClient {
 
 
 
-    //SELECT ONE
+    //SELECT
     pub async fn select<T: GenericStruct>(&self, model: &str, id: &str) -> surrealdb::Result<T> {
         if !self.initialized {
             panic!("Surreal client not initialized");
@@ -68,22 +68,6 @@ impl SurrealClient {
             .client
             .select((model, id))
             .await?;
-
-        Ok(result)
-    }
-
-
-
-    //SELECT ALL
-    pub async fn list<T: GenericStruct>(&self, model: &str) -> surrealdb::Result<Vec<T>> {
-        if !self.initialized {
-            panic!("Surreal client not initialized");
-        }
-
-        let result: Vec<T> = self
-            .client
-            .select(model)
-            .await?; 
 
         Ok(result)
     }

@@ -1,20 +1,17 @@
 use rocket::*;
 use rocket::serde::{json::Json, Serialize, Deserialize};
 use crate::database::*;
-use surrealdb::sql::Thing;
 use super::response::StatusResponse;
 
-#[derive(Debug, Deserialize, Serialize)]
-pub struct Recipie {
-    id: Option<Thing>,
-    name: String,
-}
+use crate::model::recipie_model::Recipie;
 
 //LIST
 #[get("/recipie", format="json")]
 pub async fn get_recipie(surreal: &State<surreal::SurrealClient>) -> StatusResponse<Vec<Recipie>> {
 
-    let recipies= surreal.list("recipie").await;
+    let recipies = surreal.query("SELECT * FROM recipie").await;
+
+    println!("{:?}", recipies);
 
     match recipies {
         Ok(recipies) => StatusResponse {
@@ -32,7 +29,8 @@ pub async fn get_recipie(surreal: &State<surreal::SurrealClient>) -> StatusRespo
 #[get("/recipie/<id>", format="json")]
 pub async fn get_recipie_by_id(surreal: &State<surreal::SurrealClient>, id: &str) -> StatusResponse<Option<Recipie>> {
 
-    let recipie = surreal.select("recipie", id).await;
+    let mut recipie: Result<Recipie, _> = surreal.select("recipie", id).await;
+
 
     match recipie {
         Ok(recipie) => StatusResponse {
