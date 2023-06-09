@@ -1,5 +1,3 @@
-use std::vec;
-
 use surrealdb::sql::Thing;
 use rocket::serde::{Serialize, Deserialize};
 

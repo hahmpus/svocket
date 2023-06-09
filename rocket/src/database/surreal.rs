@@ -1,5 +1,4 @@
 use rocket::Build;
-use rocket::serde::json::serde_json::de;
 use surrealdb::engine::remote::ws:: {Ws, Client};
 use surrealdb::opt::auth::Root;
 use surrealdb::Surreal;
@@ -7,8 +6,6 @@ use surrealdb::Surreal;
 use std::fmt::Debug;
 use rocket::serde::{json::Json, Serialize, DeserializeOwned};
 
-pub trait GenericStruct: Sync + Send + Serialize + DeserializeOwned + Debug {}
-impl <T: Sync + Send + Serialize + DeserializeOwned + Debug> GenericStruct for T {}
 pub struct SurrealClient {
     pub client: Surreal<Client>,
     initialized: bool,
@@ -41,7 +38,10 @@ impl SurrealClient {
 
 
     //QUERY
-    pub async fn query<T: GenericStruct>(&self, query: &str) -> surrealdb::Result<Vec<T>> {
+    pub async fn query<T>(&self, query: &str) -> surrealdb::Result<Vec<T>> 
+    where
+        T: Sync + Send + Serialize + DeserializeOwned + Debug
+    {
         if !self.initialized {
             panic!("Surreal client not initialized");
         }
@@ -59,7 +59,10 @@ impl SurrealClient {
 
 
     //SELECT
-    pub async fn select<T: GenericStruct>(&self, model: &str, id: &str) -> surrealdb::Result<T> {
+    pub async fn select<T,>(&self, model: &str, id: &str) -> surrealdb::Result<T> 
+    where
+        T: Sync + Send + Serialize + DeserializeOwned + Debug
+    {
         if !self.initialized {
             panic!("Surreal client not initialized");
         }
@@ -72,15 +75,17 @@ impl SurrealClient {
         Ok(result)
     }
 
-
-
     //CREATE
-    pub async fn create<T: GenericStruct>(&self,  model: &str, data: Json<T>) -> surrealdb::Result<T> {
+    pub async fn create<T, U>(&self,  model: &str, data: Json<T>) -> surrealdb::Result<U>
+    where
+        T: Sync + Send + Serialize + DeserializeOwned + Debug,
+        U: Sync + Send + Serialize + DeserializeOwned + Debug, 
+    {
         if !self.initialized {
             panic!("Surreal client not initialized");
         }
 
-        let created: T = self.client
+        let created: U = self.client
             .create(model)
             .content(data.into_inner())
             .await?;
@@ -91,12 +96,16 @@ impl SurrealClient {
 
 
     //UPDATE
-    pub async fn update_with_content<T: GenericStruct>(&self,  model: &str, id: &str, data: Json<T>) -> surrealdb::Result<T> {
+    pub async fn update_with_content<T, U>(&self,  model: &str, id: &str, data: Json<T>) -> surrealdb::Result<U> 
+    where
+        T: Sync + Send + Serialize + DeserializeOwned + Debug,
+        U: Sync + Send + Serialize + DeserializeOwned + Debug,
+    {
         if !self.initialized {
             panic!("Surreal client not initialized");
         }
 
-        let updated: T = self.client
+        let updated: U = self.client
             .update((model, id))
             .content(data.into_inner())
             .await?;
@@ -104,12 +113,16 @@ impl SurrealClient {
         Ok(updated)
     }
 
-    pub async fn update_with_merge<T: GenericStruct>(&self,  model: &str, id: &str, data: Json<T>) -> surrealdb::Result<T> {
+    pub async fn update_with_merge<T, U>(&self,  model: &str, id: &str, data: Json<T>) -> surrealdb::Result<U> 
+    where
+        T: Sync + Send + Serialize + DeserializeOwned + Debug,
+        U: Sync + Send + Serialize + DeserializeOwned + Debug,
+    {
         if !self.initialized {
             panic!("Surreal client not initialized");
         }
 
-        let updated: T = self.client
+        let updated: U = self.client
             .update((model, id))
             .merge(data.into_inner())
             .await?;
@@ -120,7 +133,10 @@ impl SurrealClient {
 
 
     //DELETE
-    pub async fn delete<T: GenericStruct>(&self,  model: &str, id: &str) -> surrealdb::Result<T> {
+    pub async fn delete<T>(&self,  model: &str, id: &str) -> surrealdb::Result<T> 
+    where
+        T: Sync + Send + Serialize + DeserializeOwned + Debug
+    {
         if !self.initialized {
             panic!("Surreal client not initialized");
         }

@@ -1,13 +1,14 @@
 use rocket::*;
-use rocket::serde::{json::Json, Serialize, Deserialize};
+use rocket::serde::{json::Json};
 use crate::database::*;
 use super::response::StatusResponse;
 
-use crate::model::recipie_model::Recipie;
+use crate::model::recipie_model::RecipiePost;
+use crate::model::recipie_model::RecipieResult;
 
 //LIST
 #[get("/recipie", format="json")]
-pub async fn get_recipie(surreal: &State<surreal::SurrealClient>) -> StatusResponse<Vec<Recipie>> {
+pub async fn get_recipie(surreal: &State<surreal::SurrealClient>) -> StatusResponse<Vec<RecipieResult>> {
 
     let recipies = surreal.query("SELECT * FROM recipie").await;
 
@@ -27,10 +28,9 @@ pub async fn get_recipie(surreal: &State<surreal::SurrealClient>) -> StatusRespo
 
 //GET
 #[get("/recipie/<id>", format="json")]
-pub async fn get_recipie_by_id(surreal: &State<surreal::SurrealClient>, id: &str) -> StatusResponse<Option<Recipie>> {
+pub async fn get_recipie_by_id(surreal: &State<surreal::SurrealClient>, id: &str) -> StatusResponse<Option<RecipieResult>> {
 
-    let mut recipie: Result<Recipie, _> = surreal.select("recipie", id).await;
-
+    let recipie: Result<RecipieResult, surrealdb::Error> = surreal.select("recipie", id).await;
 
     match recipie {
         Ok(recipie) => StatusResponse {
@@ -46,7 +46,7 @@ pub async fn get_recipie_by_id(surreal: &State<surreal::SurrealClient>, id: &str
 
 //POST
 #[post("/recipie", data="<recipie>")]
-pub async fn add_recipie(surreal: &State<surreal::SurrealClient>, recipie: Json<Recipie>) -> StatusResponse<Option<Recipie>> {
+pub async fn add_recipie(surreal: &State<surreal::SurrealClient>, recipie: Json<RecipiePost>) -> StatusResponse<Option<RecipieResult>> {
 
     let created = surreal.create("recipie", recipie).await; 
 
@@ -65,7 +65,7 @@ pub async fn add_recipie(surreal: &State<surreal::SurrealClient>, recipie: Json<
 
 //PUT
 #[put("/recipie/<id>", data="<recipie>")]
-pub async fn update_recipie(surreal: &State<surreal::SurrealClient>, id: &str, recipie: Json<Recipie>) -> StatusResponse<Option<Recipie>> {
+pub async fn update_recipie(surreal: &State<surreal::SurrealClient>, id: &str, recipie: Json<RecipiePost>) -> StatusResponse<Option<RecipieResult>> {
 
     let updated = surreal.update_with_merge("recipie", id, recipie).await;
 
@@ -86,7 +86,7 @@ pub async fn update_recipie(surreal: &State<surreal::SurrealClient>, id: &str, r
 #[delete("/recipie/<id>")]
 pub async fn delete_recipie(surreal: &State<surreal::SurrealClient>, id: &str) -> StatusResponse<String> {
 
-    let deleted: Result<Recipie, surrealdb::Error> = surreal.delete("recipie", id).await;
+    let deleted: Result<RecipieResult, surrealdb::Error> = surreal.delete("recipie", id).await;
 
     match deleted {
         Ok(_deleted) => StatusResponse {
@@ -96,27 +96,6 @@ pub async fn delete_recipie(surreal: &State<surreal::SurrealClient>, id: &str) -
         Err(e) => StatusResponse {
             status: 500,
             data: e.to_string()
-        }
-    }
-    
-}
-
-
-
-//TEST
-#[get("/test")]
-pub async fn test(surreal: &State<surreal::SurrealClient>) -> StatusResponse<Vec<Recipie>> {
-
-    let test = surreal.query("SELECT * FROM recipie").await;
-
-    match test {
-        Ok(test) => StatusResponse {
-            status: 200,
-            data: test
-        },
-        Err(_e) => StatusResponse {
-            status: 404,
-            data: vec![]
         }
     }
     
@@ -145,7 +124,6 @@ impl Fairing for RecipieFairing {
             add_recipie,
             update_recipie,
             delete_recipie,
-            test
         ]))
     }
 

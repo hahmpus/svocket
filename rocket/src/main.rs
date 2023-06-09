@@ -11,6 +11,7 @@ pub mod model;
 async fn main() -> Result<(), rocket::Error> {
 
     let _rocket = rocket::build()
+        //ROUTES
         .attach(SurrealFairing)
         .attach(RecipieFairing)
         .attach(IngredientFairing)
