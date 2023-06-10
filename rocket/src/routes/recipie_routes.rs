@@ -10,7 +10,8 @@ use crate::model::recipie_model::RecipieResult;
 #[get("/recipie", format="json")]
 pub async fn get_recipie(surreal: &State<surreal::SurrealClient>) -> StatusResponse<Vec<RecipieResult>> {
 
-    let recipies = surreal.query("SELECT * FROM recipie").await;
+    let query = format!("SELECT * FROM recipie FETCH ingredient");
+    let recipies: Result<Vec<RecipieResult>, surrealdb::Error> = surreal.query(&query).await;
 
     println!("{:?}", recipies);
 
@@ -28,55 +29,62 @@ pub async fn get_recipie(surreal: &State<surreal::SurrealClient>) -> StatusRespo
 
 //GET
 #[get("/recipie/<id>", format="json")]
-pub async fn get_recipie_by_id(surreal: &State<surreal::SurrealClient>, id: &str) -> StatusResponse<Option<RecipieResult>> {
+pub async fn get_recipie_by_id(surreal: &State<surreal::SurrealClient>, id: &str) -> StatusResponse<Vec<RecipieResult>> {
 
-    let recipie: Result<RecipieResult, surrealdb::Error> = surreal.select("recipie", id).await;
+    let query = format!("SELECT * FROM recipie:{} FETCH ingredient", id);
+    let recipie = surreal.query(&query).await;
 
     match recipie {
         Ok(recipie) => StatusResponse {
             status: 200,
-            data: Some(recipie)
+            data: recipie
         },
         Err(_e) => StatusResponse {
             status: 404,
-            data: None
+            data: vec![]
         }
     }
 }
 
 //POST
 #[post("/recipie", data="<recipie>")]
-pub async fn add_recipie(surreal: &State<surreal::SurrealClient>, recipie: Json<RecipiePost>) -> StatusResponse<Option<RecipieResult>> {
+pub async fn add_recipie(surreal: &State<surreal::SurrealClient>, recipie: Json<RecipiePost>) -> StatusResponse<Vec<RecipieResult>> {
 
-    let created = surreal.create("recipie", recipie).await; 
+    let name = recipie.name.clone();
+    let ingredient = recipie.ingredient.clone();
+
+    let query = format!("CREATE recipie SET name='{}', ingredient={:?}", name, ingredient);
+    let created = surreal.query(&query).await;
 
     match created {
         Ok(created_recipie) => StatusResponse {
             status: 201,
-            data: Some(created_recipie) 
+            data: created_recipie 
         },
         Err(_e) => StatusResponse {
             status: 404,
-            data: None
+            data: vec![]
         }
     }
 
 }
 
+
 //PUT
 #[put("/recipie/<id>", data="<recipie>")]
-pub async fn update_recipie(surreal: &State<surreal::SurrealClient>, id: &str, recipie: Json<RecipiePost>) -> StatusResponse<Option<RecipieResult>> {
+pub async fn update_recipie(surreal: &State<surreal::SurrealClient>, id: &str, recipie: Json<RecipiePost>) -> StatusResponse<Vec<RecipieResult>> {
 
-    let updated = surreal.update_with_merge("recipie", id, recipie).await;
+    let query = format!("UPDATE recipie:{} MERGE {{ {:?} }}", id, recipie);
+    let updated = surreal.query(&query).await;
 
     match updated {
         Ok(updated_recipie) => StatusResponse {
             status: 201,
-            data: Some(updated_recipie) 
+            data: updated_recipie 
         },
         Err(_e) => StatusResponse {
             status: 404,
-            data: None
+            data: vec![]
         }
     }
 
@@ -86,7 +94,8 @@ pub async fn update_recipie(surreal: &State<surreal::SurrealClient>, id: &str, r
 #[delete("/recipie/<id>")]
 pub async fn delete_recipie(surreal: &State<surreal::SurrealClient>, id: &str) -> StatusResponse<String> {
 
-    let deleted: Result<RecipieResult, surrealdb::Error> = surreal.delete("recipie", id).await;
+    let query = format!("DELETE recipie:{}", id);
+    let deleted: Result<Vec<RecipieResult>, surrealdb::Error> = surreal.query(&query).await;
 
     match deleted {
         Ok(_deleted) => StatusResponse {
@@ -122,7 +131,6 @@ impl Fairing for RecipieFairing {
             get_recipie,
             get_recipie_by_id,
             add_recipie,
-            update_recipie,
             delete_recipie,
         ]))
     }

@@ -1,7 +1,6 @@
 use database::surreal::SurrealFairing;
 
 use routes::recipie_routes::RecipieFairing;
-use routes::ingredient_routes::IngredientFairing;
 
 pub mod routes;
 pub mod database;
@@ -14,7 +13,6 @@ async fn main() -> Result<(), rocket::Error> {
         //ROUTES
         .attach(SurrealFairing)
         .attach(RecipieFairing)
-        .attach(IngredientFairing)
         .launch()
         .await?;
 

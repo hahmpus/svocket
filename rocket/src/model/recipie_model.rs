@@ -1,18 +1,17 @@
 use surrealdb::sql::Thing;
 use rocket::serde::{Serialize, Deserialize};
 
-use super::ingredient_model::Ingredient;
+use super::ingredient_model::IngredientResult;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct RecipieResult {
-    id: Thing,
-    name: String,
-    #[serde(default)]
-    ingridient: Vec<Ingredient>,
+    pub id: Thing,
+    pub name: String,
+    pub ingredient: Vec<IngredientResult>,
 }
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct RecipiePost {
-    name: String,
+    pub name: String,
     #[serde(default)]
-    ingridient: Vec<String>,
+    pub ingredient: Vec<String>,
 }
