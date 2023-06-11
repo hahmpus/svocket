@@ -11,7 +11,6 @@ use rocket::serde::{json::Json, Serialize, DeserializeOwned};
 pub struct SurrealClient {
     pub client: Surreal<Client>,
     initialized: bool,
-    varaibles: Vec<String>
 }
 
 impl SurrealClient {
@@ -35,7 +34,6 @@ impl SurrealClient {
         Self {
             initialized: true,
             client: surreal_client,
-            varaibles: Vec::new()
         }
     }
 
@@ -54,9 +52,6 @@ impl SurrealClient {
             .await?;
     
         let result: Vec<T> = response.take(0)?;
-        
-        //reset variables
-        
 
         Ok(result)
     }
