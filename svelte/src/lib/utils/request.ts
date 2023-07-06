@@ -1,5 +1,4 @@
 import { writable } from 'svelte/store'
-import { postRequests } from './store'
 
 declare type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE'
 
@@ -33,9 +32,9 @@ export default function (method:Method, url: string, requestData: any, queries: 
         }
 
         //adding or removing
-        if(method == 'POST' || method == 'DELETE') {
-            postRequests.add(url);
-        }
+        // if(method == 'POST' || method == 'DELETE') {
+        //     postRequests.add(url);
+        // }
 
         if(requestData && (method == 'POST' || method == 'PATCH')) {
             params.body = JSON.stringify(requestData);

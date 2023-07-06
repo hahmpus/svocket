@@ -25,14 +25,3 @@ export function freeze(callback:()=>void, key:string, time:number=1000) {
     }, time);
     callback();
 }
-
-//OBJECTS
-export function oEmpty(object:any) {
-    for(const property in object) {
-      if(Object.prototype.hasOwnProperty.call(object, property)) {
-        return false;
-      }
-    }
-  
-    return JSON.stringify(object) === JSON.stringify({});
-  }

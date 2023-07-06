@@ -25,7 +25,7 @@ export async function _POST( model:string, data:any ) {
 export async function _PUT(model:string, data:any) {
     try {
         //MERGES DATA
-        const result = await db.change(model, data)
+        const result = await db.merge(model, data)
         return JSON.stringify(result)
     } catch(e) {
         throw error(400, (e as any).message)

@@ -1,36 +1,23 @@
 <script lang="ts">
-    import { stagger } from "../../utils/utils";
-    import { postRequests }   from "../../utils/store";
 
-    //props
-    export let url:string;
-    export let filters:any;
-    
-    //get initial values and request data, then wait for it
-    import reqwest from "../../utils/request";
-    const [data, fetching, error, get] = reqwest('GET', url, filters);
-  
-    let urlRequests = postRequests.to(url);
+    export let url: string;
+    export let filters: any;
 
-    //subscribe to filters and posts to this url
-    $: {    
-        $urlRequests;
-        stagger(() => get(filters), 'DataList_'+url, 300);
-    }
+    import request from "$lib/utils/request";
+    const [data, fetching, error, get] = request("GET", url, filters);
+
+    let test: String[] = ["test", "test2", "test3", "test4"];
 
 </script>
 
-<div class="data-list-wrapper">
-    {#if $fetching}
-	    fetching...
-    {:else if $error}
-        Error: {$error}
+<div class="datalist-wrapper">
+    {#if fetching}
+        fetching...
+    {:else if error}
+        error: {error}
     {:else}
-        {#each $data as item}
-            <slot name="item" {item}></slot>
-        {/each} 
+        {#each test as item}
+            <slot name="item" {item} />
+        {/each}
     {/if}
 </div>
-
-<style>
-</style>

@@ -1,51 +1,65 @@
 <script lang="ts">
-	import TopAppBar, {
-	  Row,
-	  Section,
-	  Title,
-	  AutoAdjust,
-	} from '@smui/top-app-bar';
 
-	import PageTransition from '$lib/components/PageTransition.svelte';
-  
-	let topAppBar: TopAppBar;
-	export let data: any;
-  </script>
+    //import '@skeletonlabs/skeleton/themes/theme-seafoam.css';
+    import "../yellow.postcss"
+    import '@skeletonlabs/skeleton/styles/skeleton.css';
+    import "../app.css";
 
-<div>
-	<TopAppBar bind:this={topAppBar} variant="fixed">
-		<Row>
-		  <Section>
-			<a href="/">
-			  <Title>Home</Title>
-			</a>
-			<a href="/recipie">
-			  <Title>Recipie</Title>
-			</a>
-	
-		  </Section>
-		</Row>
-	  </TopAppBar>
-	  <AutoAdjust {topAppBar}>
-		<PageTransition pathname={data.pathname}>
-		  <slot />
-		</PageTransition>
-	  </AutoAdjust>
+    import AnimatedRoute from "$lib/components/AnimatedRoute.svelte";
+    import { AppBar, AppShell, LightSwitch, Modal } from "@skeletonlabs/skeleton";
+    import Breadcrumbs from "$lib/components/Breadcrumbs.svelte";
+
+    export let data: any;
+    
+</script>
+
+
+<div class="max-w-1140">
+    
+    <Modal 
+        flyY={10}
+        duration={100}
+    />
+
+    <AppShell>
+    
+        <AppBar 
+            slot="header"
+            background="bg-primary-100"        
+        >
+            <a href="/" class="btn variant-filled-primary">
+                home
+            </a>
+            <a href="/recipie" class="btn variant-filled-secondary">
+                recipie
+            </a>
+
+            <LightSwitch />
+
+        </AppBar>
+
+        <!-- (sidebarLeft) -->
+        <!-- (sidebarRight) -->
+        <!-- (pageHeader) -->
+
+        <svelte.component>
+            <Breadcrumbs path={data.pathname}/>
+
+            <AnimatedRoute key={data.pathname}>
+                <slot />
+            </AnimatedRoute>
+        </svelte.component>
+
+        <!-- (footer) -->
+    </AppShell>
+
+
 
 </div>
-  
 
-  
-  <style>
-	/* Hide everything above this component. */
-	:global(#smui-app),
-	:global(body),
-	:global(html) {
-	  display: block !important;
-	  height: auto !important;
-	  width: auto !important;
-	  position: static !important;
-	  margin: 0 !important;
-	}
-  </style>
-  
+<style>
+    .max-w-1140 {
+        max-width: 1140px;
+        margin: 0 auto;
+    }
+</style>
