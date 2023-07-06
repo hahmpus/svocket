@@ -1,6 +1,7 @@
 use actix_web::*;
 use actix_cors::Cors;
 
+mod model;
 mod database;
 use database::SurrealClient;
 
@@ -15,29 +16,23 @@ async fn main() -> std::io::Result<()> {
 
     std::env::set_var("RUST_LOG", "DEBUG");
     std::env::set_var("RUST_BACKTRACE", "1");
-    //env_logger::init();
+    env_logger::init();
 
     let database_client = SurrealClient::init().await;
 
     HttpServer::new(move || {
 
-        let logger: middleware::Logger   = middleware::Logger::default();
-        let cors:Cors       = Cors::default().allow_any_origin();
+        let logger: middleware::Logger = middleware::Logger::default();
+        let cors:Cors = Cors::default().allow_any_origin();
 
         App::new()
             .app_data(web::Data::new(database_client.clone()))
             .wrap(logger)
             .wrap(cors)
-            .service(hello)
             .service(post)
             .service(get)
-    })
+    }) 
     .bind(("0.0.0.0", 8080))?
     .run()
     .await
-}
-
-#[get("/")]
-async fn hello() -> HttpResponse {
-    HttpResponse::Ok().body("Hello world!")
 }
