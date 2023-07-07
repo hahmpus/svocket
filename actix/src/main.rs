@@ -6,9 +6,8 @@ mod database;
 use database::SurrealClient;
 
 mod api;
-use api::recipie::{
-    post, 
-    get
+use api::{
+    recipie
 };
 
 #[actix_web::main]
@@ -29,10 +28,14 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(database_client.clone()))
             .wrap(logger)
             .wrap(cors)
-            .service(post)
-            .service(get)
+            .service(recipie::list)
+            .service(recipie::get)
+            .service(recipie::post)
+            .service(recipie::update)
+            .service(recipie::delete)
+            //.service(web::scope("/recipie"))
     }) 
-    .bind(("0.0.0.0", 8080))?
+    .bind(("127.0.0.1", 8080))?
     .run()
     .await
 }

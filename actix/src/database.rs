@@ -36,19 +36,29 @@ impl SurrealClient {
     }
 
     //QUERY
-    pub async fn query<T>(&self, query: &str) -> surrealdb::Result<Vec<T>> 
+    pub async fn query<T, U>(&self, query: &str, data: Option<U> ) -> surrealdb::Result<Vec<T>> 
     where
-        T: Sync + Send + Serialize + DeserializeOwned + Debug
+        T: Sync + Send + Serialize + DeserializeOwned + Debug,
+        U: Serialize
     {
         if !self.initialized {
             panic!("Surreal client not initialized");
         }
 
-        let mut response = self
-            .client
-            .query(query)
-            .await?;
-    
+        let mut response = if data.is_some() {
+            self
+                .client
+                .query(query)
+                .bind(("data", data))
+                .await?
+        } else {
+            self
+                .client
+                .query(query)
+                .await?
+        }; 
+
+
         let result: Vec<T> = response.take(0)?;
 
         Ok(result)
