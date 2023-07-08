@@ -1,88 +1,92 @@
 use actix_web::*;
 use actix_web::web::{Path};
 use super::super::database::SurrealClient;
-use super::super::model::recipie;
+use super::super::model::recipie_model;
 
-use std::result::Result;
+
 
 //LIST
-#[get("/recipie")]
+#[get("")]
 pub async fn list(db: web::Data<SurrealClient>) -> HttpResponse {
 
-    let query = format!("SELECT * FROM recipie");
     let recipies = db
-        .query::<recipie::Out, recipie::In>(&query, None)
+        .get_all::<recipie_model::In, recipie_model::Out>("recipie".to_string())
         .await;
 
     match recipies {
-        Ok(recipies) => HttpResponse::Ok().body(format!("list {:?}", recipies)),
-        Err(e) => HttpResponse::Ok().body(format!("Error: {:?}", e))
+        Ok(recipies) => HttpResponse::Ok()
+            .json(recipies),
+        Err(e) => HttpResponse::Ok()
+            .body(format!("Error: {:?}", e))
     }
 
 }
 
 //GET
-#[get("/recipie/{id}")]
+#[get("/{id}")]
 pub async fn get(db: web::Data<SurrealClient>, id: Path<String>) -> HttpResponse {
 
-    let query = format!("SELECT * FROM recipie:{}", id);
-    let created = db
-        .query::<recipie::Out, recipie::In>(&query, None)
+    let id = ("recipie".to_string(), id.into_inner());
+    let recipie = db
+        .get_one::<recipie_model::In, recipie_model::Out>(id)
         .await;
 
-    match created {
-        Ok(created) => HttpResponse::Ok().body(format!("get {:?}", created)),
-        Err(e) => HttpResponse::Ok().body(format!("Error: {:?}", e))
+    match recipie {
+        Ok(created) => HttpResponse::Ok()
+            .body(format!("get {:?}", created)),
+        Err(e) => HttpResponse::Ok()
+            .body(format!("Error: {:?}", e))
     }
 
 }
 
 //ADD
-#[post("/recipie")]
-pub async fn post(db: web::Data<SurrealClient>, data: web::Json<recipie::In>) -> HttpResponse {
+#[post("")]
+pub async fn post(db: web::Data<SurrealClient>, data: web::Json<recipie_model::In>) -> HttpResponse {
 
-    let name = data.name.clone();
-    let ingredient = data.ingredient.clone();
-
-    let query = format!("CREATE recipie SET name='{}', ingredient={:?}", name, ingredient);
     let created = db
-        .query::<recipie::Out, recipie::In>(&query, None)
-        .await;
+        .create::<recipie_model::In, recipie_model::Out>("recipie".to_string(), data.into_inner())
+        .await; 
 
     match created {
-        Ok(created) => HttpResponse::Ok().body(format!("add {:?}", created)),
-        Err(e) => HttpResponse::Ok().body(format!("Error: {:?}", e))
+        Ok(created) => HttpResponse::Ok()
+            .body(format!("add {:?}", created)),
+        Err(e) => HttpResponse::Ok()
+            .body(format!("Error: {:?}", e))
     }
 
 }
 
 //EDIT
-#[put("/recipie/{id}")]
-pub async fn update(db: web::Data<SurrealClient>, id: Path<String>, data: web::Json<recipie::In>) -> HttpResponse {
+#[put("/{id}")]
+pub async fn update(db: web::Data<SurrealClient>, id: Path<String>, data: web::Json<recipie_model::In>) -> HttpResponse {
 
-    let query = format!("UPDATE recipie:{} MERGE $data", id);
-
+    let id = ("recipie".to_string(), id.into_inner());
     let updated = db
-        .query::<recipie::Out, recipie::In>(&query, Some(data.into_inner()))
+        .update_with_content::<recipie_model::In, recipie_model::Out>(id, data.into_inner())
         .await;
     
     match updated {
-        Ok(updated) => HttpResponse::Ok().body(format!("edit {:?}", updated)),
-        Err(e) => HttpResponse::Ok().body(format!("Error: {:?}", e))
+        Ok(updated) => HttpResponse::Ok()
+            .body(format!("edit {:?}", updated)),
+        Err(e) => HttpResponse::Ok()
+            .body(format!("Error: {:?}", e))
     }
 }
 
 //DELETE
-#[delete("/recipie/{id}")]
+#[delete("/{id}")]
 pub async fn delete(db: web::Data<SurrealClient>, id: Path<String>) -> HttpResponse {
 
-    let query = format!("DELETE recipie:{}", id);
-    let deleted: Result<Vec<recipie::Out>, surrealdb::Error> = db
-        .query::<recipie::Out, recipie::In>(&query, None)
+    let id = ("recipie".to_string(), id.into_inner());
+    let deleted = db
+        .delete_one::<recipie_model::In, recipie_model::Out>(id)
         .await;
 
     match deleted {
-        Ok(created) => HttpResponse::Ok().body(format!("delete {:?}", created)),
-        Err(e) => HttpResponse::Ok().body(format!("Error: {:?}", e))
+        Ok(created) => HttpResponse::Ok()
+            .body(format!("delete {:?}", created)),
+        Err(e) => HttpResponse::Ok()
+            .body(format!("Error: {:?}", e))
     }
 }

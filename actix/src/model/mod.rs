@@ -1,1 +1,2 @@
-pub mod recipie;
+pub mod recipie_model;
+pub mod ingredient_model;
