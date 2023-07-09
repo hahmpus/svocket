@@ -20,10 +20,8 @@ pub async fn list(surreal: web::Data<Arc<Surreal<Client>>>) -> HttpResponse {
         .await;
 
     match recipies {
-        Ok(recipies) => HttpResponse::Ok()
-            .json(recipies),
-        Err(e) => HttpResponse::Ok()
-            .body(format!("Error: {:?}", e))
+        Ok(recipies) => HttpResponse::Ok().json(recipies),
+        Err(e) => HttpResponse::Ok().body(format!("Error: {:?}", e))
     }
 
 }
@@ -37,10 +35,8 @@ pub async fn get(surreal: web::Data<Arc<Surreal<Client>>>, id: Path<String>) -> 
         .await;
 
     match recipie {
-        Ok(created) => HttpResponse::Ok()
-            .body(format!("get {:?}", created)),
-        Err(e) => HttpResponse::Ok()
-            .body(format!("Error: {:?}", e))
+        Ok(recipie) => HttpResponse::Ok().json(recipie),
+        Err(e) => HttpResponse::Ok().body(format!("Error: {:?}", e))
     }
 
 }
@@ -55,10 +51,8 @@ pub async fn add(surreal: web::Data<Arc<Surreal<Client>>>, data: web::Json<recip
         .await;
 
     match created {
-        Ok(created) => HttpResponse::Ok()
-            .body(format!("add {:?}", created)),
-        Err(e) => HttpResponse::Ok()
-            .body(format!("Error: {:?}", e))
+        Ok(created) => HttpResponse::Ok().json(created),
+        Err(e) => HttpResponse::Ok().body(format!("Error: {:?}", e))
     }
 
 }
@@ -73,10 +67,8 @@ pub async fn update(surreal: web::Data<Arc<Surreal<Client>>>, id: Path<String>, 
         .await;
     
     match updated {
-        Ok(updated) => HttpResponse::Ok()
-            .body(format!("edit {:?}", updated)),
-        Err(e) => HttpResponse::Ok()
-            .body(format!("Error: {:?}", e))
+        Ok(updated) => HttpResponse::Ok().json(updated),
+        Err(e) => HttpResponse::Ok().body(format!("Error: {:?}", e))
     }
 }
 
@@ -89,9 +81,7 @@ pub async fn delete(surreal: web::Data<Arc<Surreal<Client>>>, id: Path<String>) 
         .await;
 
     match deleted {
-        Ok(created) => HttpResponse::Ok()
-            .body(format!("delete {:?}", created)),
-        Err(e) => HttpResponse::Ok()
-            .body(format!("Error: {:?}", e))
+        Ok(deleted) => HttpResponse::Ok().json(deleted),
+        Err(e) => HttpResponse::Ok().body(format!("Error: {:?}", e))
     }
 }
