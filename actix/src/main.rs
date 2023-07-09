@@ -2,13 +2,36 @@ use actix_web::*;
 use actix_cors::Cors;
 
 mod model;
-mod database;
-use database::SurrealClient;
+use surrealdb::engine::remote::ws:: {Ws, Client};
+use surrealdb::opt::auth::Root;
+use surrealdb::Surreal;
+use std::sync::Arc;
 
 mod api;
 use api::{
     recipie
 };
+
+async fn surreal_init() -> Arc<Surreal<Client>> {
+
+    let client = Surreal::new::<Ws>("127.0.0.1:8000").await.unwrap();
+    
+    client
+        .signin(Root {
+            username: "root",
+            password: "root",
+        })
+        .await
+        .unwrap(); 
+
+    client
+        .use_ns("test")
+        .use_db("test")
+        .await
+        .unwrap();
+
+    Arc::new(client)
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -17,7 +40,7 @@ async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_BACKTRACE", "1");
     env_logger::init();
 
-    let database_client = SurrealClient::init().await;
+    let surreal = surreal_init().await;
 
     HttpServer::new(move || {
 
@@ -25,14 +48,14 @@ async fn main() -> std::io::Result<()> {
         let cors:Cors = Cors::default().allow_any_origin();
 
         App::new()
-            .app_data(web::Data::new(database_client.clone()))
+            .app_data(web::Data::new(Arc::clone(&surreal)))
             .wrap(logger)
             .wrap(cors)
             .service(
                 web::scope("/recipie")
                     .service(recipie::list)
                     .service(recipie::get)
-                    .service(recipie::post)
+                    .service(recipie::add)
                     .service(recipie::update)
                     .service(recipie::delete)
             )
