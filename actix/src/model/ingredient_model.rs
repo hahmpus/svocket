@@ -9,5 +9,13 @@ pub struct Out {
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct In {
- pub name: String,
+    pub name: String,
+}
+
+//prioritize getting the item, otherwise string if removed
+#[derive(Debug, Deserialize, Serialize, Clone)]
+#[serde(untagged)]
+pub enum Ingredient {
+    Item(Out),
+    Id(Thing),
 }
