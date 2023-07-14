@@ -9,7 +9,7 @@ use std::sync::Arc;
 
 mod api;
 use api::{
-    recipie
+    recipie_controller
 };
 
 async fn surreal_init() -> Arc<Surreal<Client>> {
@@ -53,11 +53,11 @@ async fn main() -> std::io::Result<()> {
             .wrap(cors)
             .service(
                 web::scope("/recipie")
-                    .service(recipie::list)
-                    .service(recipie::get)
-                    .service(recipie::add)
-                    .service(recipie::update)
-                    .service(recipie::delete)
+                    .service(recipie_controller::list)
+                    .service(recipie_controller::get)
+                    .service(recipie_controller::add)
+                    .service(recipie_controller::update)
+                    .service(recipie_controller::delete)
             )
     }) 
     .bind(("127.0.0.1", 8080))?

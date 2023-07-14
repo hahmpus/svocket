@@ -1,23 +1,26 @@
 use std::sync::Arc;
 
 use actix_web::*;
-use actix_web::web::{Path};
+use actix_web::web::Path;
 use surrealdb::Surreal;
 use surrealdb::engine::remote::ws::Client;
 
-use super::super::model::recipie_model;
+use super::super::model::recipie_model::Recipie;
 
-type SurrealResultMany   = Result<Vec<recipie_model::Out>, surrealdb::Error>;
-type SurrealResultOne    = Result<Vec<recipie_model::Out>, surrealdb::Error>;
-type SurrealResultOption = Result<Option<recipie_model::Out>, surrealdb::Error>;
+type SurrealResultMany   = Result<Vec<Recipie>, surrealdb::Error>;
+type SurrealResultOne    = Result<Recipie, surrealdb::Error>;
+type SurrealResultOption = Result<Option<Recipie>, surrealdb::Error>;
 
 //LIST
 #[get("")]
 pub async fn list(surreal: web::Data<Arc<Surreal<Client>>>) -> HttpResponse {
 
-    let recipies: SurrealResultMany = surreal
-        .select("recipie".to_string())
-        .await;
+    let mut result = surreal
+        .query(format!("SELECT * FROM recipie FETCH ingredients"))
+        .await
+        .expect("query failed");
+
+    let recipies: SurrealResultMany = result.take(0);
 
     match recipies {
         Ok(recipies) => HttpResponse::Ok().json(recipies),
@@ -30,9 +33,12 @@ pub async fn list(surreal: web::Data<Arc<Surreal<Client>>>) -> HttpResponse {
 #[get("/{id}")]
 pub async fn get(surreal: web::Data<Arc<Surreal<Client>>>, id: Path<String>) -> HttpResponse {
 
-    let recipie: SurrealResultOne = surreal
-        .select(("recipie".to_string(), id.into_inner()))
-        .await;
+    let mut result = surreal
+        .query(format!("SELECT * FROM recipie:{} FETCH ingredients", id.into_inner()))
+        .await
+        .expect("query failed");
+
+    let recipie: SurrealResultOption = result.take(0);
 
     match recipie {
         Ok(recipie) => HttpResponse::Ok().json(recipie),
@@ -43,11 +49,17 @@ pub async fn get(surreal: web::Data<Arc<Surreal<Client>>>, id: Path<String>) -> 
 
 //ADD
 #[post("")]
-pub async fn add(surreal: web::Data<Arc<Surreal<Client>>>, data: web::Json<recipie_model::In>) -> HttpResponse {
+pub async fn add(surreal: web::Data<Arc<Surreal<Client>>>, data: web::Json<Recipie>) -> HttpResponse {
+
+    let data = data.into_inner();
 
     let created: SurrealResultOne = surreal
-        .create("recipie".to_string())
-        .content(data.into_inner())
+        .create("recipie")
+        .content( Recipie {
+            id: None,
+            name: data.name.clone(),
+            ingredients: Recipie::parse_ingredients(data.ingredients.clone()),
+        })
         .await;
 
     match created {
@@ -59,11 +71,17 @@ pub async fn add(surreal: web::Data<Arc<Surreal<Client>>>, data: web::Json<recip
 
 //EDIT
 #[put("/{id}")]
-pub async fn update(surreal: web::Data<Arc<Surreal<Client>>>, id: Path<String>, data: web::Json<recipie_model::In>) -> HttpResponse {
+pub async fn update(surreal: web::Data<Arc<Surreal<Client>>>, id: Path<String>, data: web::Json<Recipie>) -> HttpResponse {
+
+    let data = data.into_inner();
 
     let updated: SurrealResultOption = surreal
         .update(("recipie".to_string(), id.into_inner()))
-        .content(data.into_inner())
+        .content( Recipie {
+            id: None,
+            name: data.name.clone(),
+            ingredients: Recipie::parse_ingredients(data.ingredients.clone()),
+        })
         .await;
     
     match updated {
@@ -76,7 +94,7 @@ pub async fn update(surreal: web::Data<Arc<Surreal<Client>>>, id: Path<String>, 
 #[delete("/{id}")]
 pub async fn delete(surreal: web::Data<Arc<Surreal<Client>>>, id: Path<String>) -> HttpResponse {
 
-    let deleted: SurrealResultOption = surreal
+    let deleted: SurrealResultMany = surreal
         .delete(("recipie".to_string(), id.into_inner()))
         .await;
 

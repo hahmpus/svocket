@@ -1,1 +1,1 @@
-pub mod recipie;
+pub mod recipie_controller;
