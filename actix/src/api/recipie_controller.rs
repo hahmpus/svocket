@@ -10,10 +10,11 @@ use super::super::model::recipie_model::Recipie;
 type SurrealResultMany   = Result<Vec<Recipie>, surrealdb::Error>;
 type SurrealResultOne    = Result<Recipie, surrealdb::Error>;
 type SurrealResultOption = Result<Option<Recipie>, surrealdb::Error>;
+type SurrealClient       = Arc<Surreal<Client>>;
 
 //LIST
 #[get("")]
-pub async fn list(surreal: web::Data<Arc<Surreal<Client>>>) -> HttpResponse {
+pub async fn list(surreal: web::Data<SurrealClient>) -> HttpResponse {
 
     let mut result = surreal
         .query(format!("SELECT * FROM recipie FETCH ingredients"))
@@ -26,12 +27,11 @@ pub async fn list(surreal: web::Data<Arc<Surreal<Client>>>) -> HttpResponse {
         Ok(recipies) => HttpResponse::Ok().json(recipies),
         Err(e) => HttpResponse::Ok().body(format!("Error: {:?}", e))
     }
-
 }
 
 //GET
 #[get("/{id}")]
-pub async fn get(surreal: web::Data<Arc<Surreal<Client>>>, id: Path<String>) -> HttpResponse {
+pub async fn get(surreal: web::Data<SurrealClient>, id: Path<String>) -> HttpResponse {
 
     let mut result = surreal
         .query(format!("SELECT * FROM recipie:{} FETCH ingredients", id.into_inner()))
@@ -44,12 +44,11 @@ pub async fn get(surreal: web::Data<Arc<Surreal<Client>>>, id: Path<String>) -> 
         Ok(recipie) => HttpResponse::Ok().json(recipie),
         Err(e) => HttpResponse::Ok().body(format!("Error: {:?}", e))
     }
-
 }
 
 //ADD
 #[post("")]
-pub async fn add(surreal: web::Data<Arc<Surreal<Client>>>, data: web::Json<Recipie>) -> HttpResponse {
+pub async fn add(surreal: web::Data<SurrealClient>, data: web::Json<Recipie>) -> HttpResponse {
 
     let data = data.into_inner();
 
@@ -66,12 +65,11 @@ pub async fn add(surreal: web::Data<Arc<Surreal<Client>>>, data: web::Json<Recip
         Ok(created) => HttpResponse::Ok().json(created),
         Err(e) => HttpResponse::Ok().body(format!("Error: {:?}", e))
     }
-
 }
 
 //EDIT
 #[put("/{id}")]
-pub async fn update(surreal: web::Data<Arc<Surreal<Client>>>, id: Path<String>, data: web::Json<Recipie>) -> HttpResponse {
+pub async fn update(surreal: web::Data<SurrealClient>, id: Path<String>, data: web::Json<Recipie>) -> HttpResponse {
 
     let data = data.into_inner();
 
@@ -92,7 +90,7 @@ pub async fn update(surreal: web::Data<Arc<Surreal<Client>>>, id: Path<String>, 
 
 //DELETE
 #[delete("/{id}")]
-pub async fn delete(surreal: web::Data<Arc<Surreal<Client>>>, id: Path<String>) -> HttpResponse {
+pub async fn delete(surreal: web::Data<SurrealClient>, id: Path<String>) -> HttpResponse {
 
     let deleted: SurrealResultMany = surreal
         .delete(("recipie".to_string(), id.into_inner()))

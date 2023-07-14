@@ -12,6 +12,7 @@ pub struct Recipie {
 }
 
 impl Recipie {
+    //this is needed when we send data in, surreal needs a "thing" to understand the link
     pub fn parse_ingredients(ingredients: Vec<IngredientVariants>) -> Vec<IngredientVariants> {
         
         let mut ingredients_as_things: Vec<IngredientVariants> = vec![];
